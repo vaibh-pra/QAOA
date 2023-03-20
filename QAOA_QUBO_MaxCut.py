@@ -130,7 +130,7 @@ def qubo_obj(x, G):
     summ = 0
     for i,j in G.edges():
         if i<j:
-            summ += 2*int(x[i])*int(x[j])-int(x[i])-int(x[j])
+            summ += 2*int(x[i])*int(x[j])-int(x[i])-int(x[j]) #Not incorporating graph weights.
     return summ
 
 
