@@ -18,21 +18,23 @@ from operator import itemgetter
 #G = nx.Graph()
 G = nx.gnm_random_graph(5,6)
 #G.add_edges_from([[0,3],[0,4],[1,3],[1,4],[2,3],[2,4]])
-w = np.array(nx.adjacency_matrix(G, nodelist=range(G.number_of_nodes()))).tolist()
 n = G.number_of_nodes()
-Q = np.ones((n,n))
+Q = np.ones((n,n)) #Initialize the matrix
+
+w = np.array(nx.adjacency_matrix(G, nodelist=range(n))).tolist()
+
 for i,j in G.edges():
-        Q[i,j]=w[i,j]
-        Q[j,i]=w[j,i]
+        Q[i,j]=2*w[i,j]
+        Q[j,i]=2*w[j,i]
 for i in range(n):
     for j in range(n):
         if (i,j) not in G.edges() and (j,i) not in G.edges():
-            Q[i,j]=-1
-            Q[j,i]=-1
-np.fill_diagonal(Q,-1)
+            Q[i,j]=0
+            Q[j,i]=0
+#np.fill_diagonal(Q,-1)
 
 nx.draw(G)
-print(Q,G.edges())
+#print(Q,G.edges())
 
 
 # In[1349]:
@@ -130,7 +132,7 @@ def qubo_obj(x, G):
     summ = 0
     for i,j in G.edges():
         if i<j:
-            summ += 2*int(x[i])*int(x[j])-int(x[i])**2-int(x[j])**2 # = x^T Q x
+            summ += Q[i,j]*int(x[i])*int(x[j])-int(x[i])**2-int(x[j])**2 # = x^T Q x
     return summ
 
 
