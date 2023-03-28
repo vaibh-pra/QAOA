@@ -80,8 +80,8 @@ def append_x_term(qc, q1, beta):
 def get_cost_operator_circuit(G, gamma):
     N = G.number_of_nodes()
     qc = QuantumCircuit(N,N)
-#    for i in G.nodes():
-#        append_z_term(qc, i, gamma)
+    for i in G.nodes():
+        append_z_term(qc, i, gamma)
 #   for i in range(n):
 #        for j in range(n):
 #            if i<j:
