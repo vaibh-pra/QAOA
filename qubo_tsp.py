@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[940]:
+# In[31]:
 
 
 from qiskit import *
+from qiskit.algorithms.optimizers import SPSA, COBYLA
 from qiskit.visualization import plot_histogram
 from qiskit_optimization.applications import Tsp
 import numpy as np
@@ -14,18 +15,19 @@ from operator import itemgetter
 import matplotlib.pyplot as plt
 
 
-# In[974]:
+# In[49]:
 
 
 G = nx.Graph()
 #E = [(0, 1, 3), (0, 2, 2), (0, 3, 10), (1, 2, 6), (1, 3, 2), (2, 3, 6)]
 
-G = nx.gnm_random_graph(4,6)
-G.add_weighted_edges_from(E)
-pos = nx.spring_layout(G)
+G = nx.gnm_random_graph(6,15)
+
+#G.add_weighted_edges_from(E)
+
 n = G.number_of_nodes()
-N = int(len(G)-1)**2
-print(N)
+N = int(n-1)**2
+
 Q = np.ones((n,n))
 
 for i,j in G.edges():
@@ -36,14 +38,15 @@ w = np.array(nx.adjacency_matrix(G, nodelist=range(n))).tolist()
 #w = nx.adjacency_matrix(G, nodelist=range(n))
 
 for i,j in G.edges():
-        Q[i,j]=round(w[i,j])
-        Q[j,i]=round(w[j,i])
+        Q[i,j]=w[i,j]
+        Q[j,i]=w[j,i]
 #print(str(Q[i][j]))
-#for i in range(n):
-#    for j in range(n):
-#        if (i,j) not in G.edges() and (j,i) not in G.edges():
-#            Q[i,j]=0
-#            Q[j,i]=0
+
+for i in range(n):
+    for j in range(n):
+        if (i,j) not in G.edges() and (j,i) not in G.edges():
+            Q[i,j]=100
+            Q[j,i]=100
 
 vc = [0]*n
 for i in range(n):
@@ -63,7 +66,7 @@ nx.draw(G)
 print(Q,G.edges(),vc)
 
 
-# In[654]:
+# In[33]:
 
 
 def append_zz_term(qc, q1, q2, gamma):
@@ -73,7 +76,7 @@ def append_zz_term(qc, q1, q2, gamma):
     return qc
 
 
-# In[655]:
+# In[34]:
 
 
 def append_z_term(qc, q1, gamma):
@@ -81,7 +84,7 @@ def append_z_term(qc, q1, gamma):
     return qc
 
 
-# In[656]:
+# In[35]:
 
 
 def append_x_term(qc, q1, beta):
@@ -89,7 +92,7 @@ def append_x_term(qc, q1, beta):
     return qc
 
 
-# In[789]:
+# In[36]:
 
 
 def get_cost_operator_circuit(G, gamma):
@@ -104,7 +107,7 @@ def get_cost_operator_circuit(G, gamma):
     return qc
 
 
-# In[790]:
+# In[37]:
 
 
 def get_mixer_operator_circuit(G, beta):
@@ -115,7 +118,7 @@ def get_mixer_operator_circuit(G, beta):
     return qc
 
 
-# In[791]:
+# In[38]:
 
 
 def get_qaoa_circuit(G, beta, gamma):
@@ -139,21 +142,21 @@ def get_qaoa_circuit(G, beta, gamma):
     return qc
 
 
-# In[792]:
+# In[39]:
 
 
 def invert_counts(counts):
     return {k[::-1]:v for k,v in counts.items()}
 
 
-# In[913]:
+# In[40]:
 
 
 def qubo_obj(string,G):
     
     A = 100
     n = G.number_of_nodes()
-    g = len(G)-1
+    g = n-1
     # Convert the string to a 1D array of integers using list comprehension
     array1d = np.array([int(i) for i in string])
     
@@ -170,7 +173,7 @@ def qubo_obj(string,G):
             for k in range(g):
                 for l in range(g):
                     if i<j and k != l:
-                        summ1 += Q[i][j]*x[i][k]*x[j][l]
+                        summ1 += x[i][k]*x[j][l]*Q[i][j]
     
     #Row and Col summations
     row_sum = np.sum(x, axis = 1)
@@ -185,7 +188,7 @@ def qubo_obj(string,G):
     return tot_sum
 
 
-# In[794]:
+# In[41]:
 
 
 def compute_qubo_energy(counts, G):
@@ -198,7 +201,7 @@ def compute_qubo_energy(counts, G):
     return energy/total_counts
 
 
-# In[795]:
+# In[42]:
 
 
 def get_black_box_objective(G,p):
@@ -212,17 +215,17 @@ def get_black_box_objective(G,p):
     return f
 
 
-# In[979]:
+# In[ ]:
 
 
 import time
 start = time.time()
 
-p = 3
+p = 1
 obj = get_black_box_objective(G, p)
 
 init_point = np.ones(2*p)
-res_sample = minimize(obj, init_point, method = 'COBYLA', options = {'maxiter':1000, 'disp':True})
+res_sample = minimize(obj, init_point, method = 'SLSQP', options = {'maxiter':1000, 'disp':True})
 
 optimal_theta = res_sample['x']
 backend = Aer.get_backend('qasm_simulator')
@@ -234,13 +237,13 @@ end = time.time()
 print((end-start),"s")
 
 
-# In[980]:
+# In[1302]:
 
 
-plot_histogram(counts)
+#plot_histogram(counts)
 
 
-# In[981]:
+# In[48]:
 
 
 pos = nx.spring_layout(G)
@@ -253,20 +256,41 @@ options = {
 }
 
 min_engy, optimal_string = min([(qubo_obj(x, G), x) for x in counts.keys()])
-print(min_engy, optimal_string)
+#print(min_engy, optimal_string)
+op_str = optimal_string[::-1]
 
-str_by_vertex = [optimal_string[i:i + n - 1] for i in range(0, len(optimal_string) + 1, n - 1)]
-salesman_walk = '0'.join(str_by_vertex) + '0' * (n - 1) + '1'
-solution = {i:t for i in range(n) for t in range(n) if salesman_walk[i * n + t] == '1'}
+array1d = np.array([int(i) for i in optimal_string])
+mtrx1 = array1d.reshape((n-1,n-1))
+#print(mtrx1, optimal_string)
+
+str_by_vertex = [optimal_string[i:i + n - 1] for i in range(0, len(optimal_string) + 1, n-1)]
+salesman_walk = '0'.join(str_by_vertex) + '0' * (n-1) + '1'
+array1d = np.array([int(i) for i in salesman_walk])
+mtrx = array1d.reshape((n,n))
+print(mtrx, salesman_walk)
+
+all_zero_cols = np.where(np.all(mtrx == 0, axis=0))[0]
+all_zero_rows = np.where(np.all(mtrx == 0, axis=1))[0]
+
+mtrx[all_zero_rows, all_zero_cols] = 1
+
+mtrx_str = ''.join(map(str, mtrx.flatten()))
+
+str_by_sw = [mtrx_str[i:i + n-1] for i in range(0, len(mtrx_str) + 1, n - 1)]
+solution = {i:t for i in range(n) for t in range(n) if mtrx_str[i * n + t] == '1'}
+
+print(mtrx, mtrx_str)
+
 distance = sum([G[u][v]["weight"] if solution[u] == (solution[v] + 1) % n 
-                or solution[v] == (solution[u] + 1) % n else 0
-                for (u, v) in G.edges])
+                   or solution[v] == (solution[u] + 1) % n else 0
+                 for (u, v) in G.edges])
 print("The walk found by parameterized quantum circuit:", solution, "with distance", distance)
 
 label_dict = {i: str(i) + ", " + str(t) for i, t in solution.items()}
 edge_color = ["red" if solution[u] == (solution[v] + 1) % n
               or solution[v] == (solution[u] + 1) % n else "black"
               for (u, v) in G.edges]
+
 fig, ax = plt.subplots(1, 2, figsize=(15, 4))
 for i, a in enumerate(ax):
     a.axis('off')
@@ -278,18 +302,19 @@ plt.axis("off")
 plt.show()
 
 
-# In[921]:
+# In[ ]:
 
 
 qc = get_qaoa_circuit(G, [np.pi/4], [np.pi/3])
 qc.draw()
+qc.depth()
 
 
-# In[933]:
+# In[1065]:
 
 
-for x in counts.keys():
-    print(x, qubo_obj(x,G))
+#for x in counts.keys():
+#    print(x, qubo_obj(x,G))
 
 
 # In[ ]:
