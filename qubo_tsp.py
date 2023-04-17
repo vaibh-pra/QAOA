@@ -154,7 +154,7 @@ def invert_counts(counts):
 
 def qubo_obj(string,G):
     
-    A = 100
+    A = 500
     n = G.number_of_nodes()
     g = n-1
     # Convert the string to a 1D array of integers using list comprehension
@@ -164,17 +164,21 @@ def qubo_obj(string,G):
     x = array1d.reshape((g,g))
     
     
-    summ1, row_sum, col_sum = 0,0,0
-    summ2, summ3, tot_sum = 0,0,0 
+    summ1, row_sum, col_sum, summ5 = 0,0,0,0
+    summ2, summ4, summ3, tot_sum = 0,0,0,0 
     
     #Qubo term
     for i in range(g):
         for j in range(g):
             for k in range(g):
                 for l in range(g):
-                    if i<j and k != l:
-                        summ1 += x[i][k]*x[j][l]*Q[i][j]
+                    if i!=j and k != l:
+                        if (i,j) in G.edges():
+                            summ1 += x[i][k]*x[j][l]*Q[i][j]/2
+                        if (i,j) not in G.edges():
+                            summ4 += x[i][k]*x[j][l]/2
     
+                        
     #Row and Col summations
     row_sum = np.sum(x, axis = 1)
     col_sum = np.sum(x, axis = 0)
@@ -183,7 +187,14 @@ def qubo_obj(string,G):
     summ2 = np.sum((1-row_sum)**2)
     summ3 = np.sum((1-col_sum)**2)
     
-    tot_sum = summ1 + A*(summ2 + summ3)
+    # Penalty for Hamiltonian cycle
+    for i in range(g):
+        for j in range(g):
+            if i != j:
+                # Penalize if vertex i is visited twice or not visited at all
+                summ5 += (x[i][j] * x[i][j] - x[i][j])
+    
+    tot_sum = summ1 + A*(summ2 + summ3 + summ4 + summ5)
     
     return tot_sum
 
