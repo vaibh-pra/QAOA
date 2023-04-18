@@ -185,14 +185,8 @@ def qubo_obj(string,G):
     summ2 = np.sum((1-row_sum)**2)
     summ3 = np.sum((1-col_sum)**2)
     
-    # Penalty for Hamiltonian cycle
-    for i in range(g):
-        for j in range(g):
-            if i != j:
-                # Penalize if vertex i is visited twice or not visited at all
-                summ5 += (x[i][j] * x[i][j] - x[i][j])
     
-    tot_sum = summ1 + A*(summ2 + summ3 + summ4 + summ5)
+    tot_sum = summ1 + A*(summ2 + summ3 + summ4)
     
     return tot_sum
 
