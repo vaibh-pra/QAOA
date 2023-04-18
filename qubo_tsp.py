@@ -5,9 +5,7 @@
 
 
 from qiskit import *
-from qiskit.algorithms.optimizers import SPSA, COBYLA
 from qiskit.visualization import plot_histogram
-from qiskit_optimization.applications import Tsp
 import numpy as np
 import networkx as nx
 from scipy.optimize import minimize
