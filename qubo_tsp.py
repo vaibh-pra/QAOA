@@ -155,7 +155,7 @@ def qubo_obj(string,G):
     A = 500
     n = G.number_of_nodes()
     g = n-1
-    # Convert the string to a 1D array of integers using list comprehension
+    # Convert the string to a 1D array of integers.
     array1d = np.array([int(i) for i in string])
     
     # Reshape the 1D array into a 2D array of size 2x2
