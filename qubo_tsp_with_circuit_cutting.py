@@ -110,8 +110,8 @@ def get_cost_operator_circuit(G, gamma):
             i += k
             j += k
             if i < j:
-#                print(i,j)
                 append_zz_term(qc, i, j, gamma)
+                
 #    for i in range(N):
 #        for j in range(N):
 #            if i<j:
@@ -123,7 +123,6 @@ def get_cost_operator_circuit(G, gamma):
 # In[1212]:
 
 
-qc = get_qaoa_circuit(G, [np.pi/4], [np.pi/3])
 
 
 # In[1010]:
@@ -214,8 +213,7 @@ def qubo_obj(string,G):
 # In[1014]:
 
 
-print(qubo_obj('0000100010100000100000100', G))
-print(range(n))
+
 
 
 # In[1015]:
@@ -365,7 +363,7 @@ qc.depth()
 num_single_qubit_gates = qc.count_ops()['h'] + qc.count_ops()['rx']
 num_two_qubit_gates = qc.count_ops()['cx']
 num_gates = num_single_qubit_gates + num_two_qubit_gates
-print(num_gates)
+#print(num_gates)
 
 
 # In[1065]:
@@ -378,7 +376,7 @@ print(num_gates)
 # In[362]:
 
 
-print(qubo_obj('1001100010', G))
+#print(qubo_obj('1001100010', G))
 
 
 # In[700]:
@@ -400,7 +398,7 @@ for i in range(g+1):
                         string2 = 'x_' + str(j) + '_' + str(l)
                         q = str(Q[i][j])
                         string3 += q + ' ' + string1 + ' ' + string2 + ' + '
-print(string3)
+#print(string3)
                         #summ1 += x[i][j]*x[k][l]
 #print(summ1)
 summ2 = 0
@@ -421,12 +419,4 @@ for i in range(n):
 
 
 # In[ ]:
-
-
-# Penalty for Hamiltonian cycle
-   for i in range(g):
-       for j in range(g):
-           if i != j:
-               # Penalize if vertex i is visited twice or not visited at all
-               summ5 += (2*x[i][j] - x[i][j])
 
